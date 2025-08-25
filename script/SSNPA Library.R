@@ -26,7 +26,14 @@ my_cluster_samples <- function(features, meta_data_df, n_pc, cluster_resolution,
   s_obj <- Seurat::ScaleData(s_obj, features = Seurat::VariableFeatures(s_obj), verbose = FALSE)
   
   # Run PCA
-  s_obj <- Seurat::RunPCA(object = s_obj, features = row.names(s_obj@assays[["RNA"]]@data), npcs = n_pc, pcs.compute = 30, seed.use = seed_value, verbose = FALSE)
+  # s_obj <- Seurat::RunPCA(object = s_obj, features = row.names(s_obj@assays[["RNA"]]@data), npcs = n_pc, pcs.compute = 30, seed.use = seed_value, verbose = FALSE)
+  s_obj <- Seurat::RunPCA(
+    s_obj,
+    features   = Seurat::VariableFeatures(s_obj),
+    npcs       = n_pc,
+    seed.use   = seed_value,
+    verbose    = FALSE
+  )
   
   s_obj <- Seurat::FindNeighbors(s_obj, dims = 1:n_pc, verbose = F)
   s_obj <- Seurat::FindClusters(s_obj, resolution = cluster_resolution, random.seed = seed_value, verbose = F)
@@ -75,7 +82,25 @@ my_cluster_samples <- function(features, meta_data_df, n_pc, cluster_resolution,
 # 如果 ssnpa 是 GitHub 包，使用：
 # devtools::install_github("HanbinMa/ssnpa")  # 或替代地址
 
-
+find_markov_blanket <- function(g, target) {
+  t <- igraph::V(g)[target]
+  # parents: 入边指向 target 的边
+  from.parents.e <- igraph::E(g)[.to(target)]
+  # children: 由 target 发出的边
+  to.children.e  <- igraph::E(g)[.from(target)]
+  
+  children.v <- igraph::V(g)[igraph::get.edges(g, to.children.e)[, 1]]
+  parents.v  <- igraph::V(g)[igraph::get.edges(g, from.parents.e)[, 1]]
+  
+  # coparents: 指向 children 的其它父母（配偶）
+  from.coparents.e <- igraph::E(g)[.to(children.v)]
+  coparents.v <- igraph::V(g)[igraph::get.edges(g, from.coparents.e)[, 1]]
+  
+  mb <- c(children.v, parents.v, coparents.v)
+  mb <- unique(mb)
+  mb <- igraph::V(g)[setdiff(mb, t)]
+  make.names(names(mb))
+}
 
 
 my_calculate_features <- function(net_file,exp_data_s,reference_samples) {
@@ -105,7 +130,7 @@ my_calculate_features <- function(net_file,exp_data_s,reference_samples) {
   names(featureselection) <- c("selected_var","num_var")
   
   for (i in 1:length(var_genes)){
-    mb <- ssnpa::find_markov_blanket(g,var_genes[i])
+    mb <- find_markov_blanket(g,var_genes[i])
     Y <- ref_exp[,var_genes[i]]
     Y_full <- exp_data_s[,var_genes[i]]
     if (length(mb)>0){
@@ -198,7 +223,7 @@ my_learn_fges_network <- function(fges_in_file_path, fges_pd, out_dir){
   s5 <- paste0(" --out ")
   s5_ <- paste0(" --exclude-variables ", out_dir,"/fges_net_pd",toString(fges_pd),"_zero_variance.txt"," --out ")
   s7 <- paste0(" --output-prefix fges_net_pd", s4)
-#  s_thread <- " --thread 16"  # ✅ 加线程设置 
+  #  s_thread <- " --thread 16"  # ✅ 加线程设置 
   fges_java_call <- paste0(s1, ssnpa_path, s1_5, fges_in_file_path, s3, s4, s5, out_dir, s7) ##sometimes zero variance genes exists, build zero variance file first
   print(fges_java_call) 
   system(fges_java_call)
@@ -505,5 +530,4 @@ auc <- function(x, y, from = min(x, na.rm=TRUE), to = max(x, na.rm=TRUE), type=c
   res
 }
 fixed_output_dir <- "/project2/sli68423_1316/users/Kailiang/Test_Rcode/output"
-
 
