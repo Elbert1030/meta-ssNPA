@@ -1,4 +1,4 @@
-source('R/FilterPerturbGenes.R')
+source('/project2/sli68423_1316/users/Kailiang/meta-ssnpa/script/SSNPA Library.R')
 
 library(plotly)
 ##library(ggnet)
@@ -10,10 +10,8 @@ library(visNetwork)
 library(intergraph)
 require(igraph)
 
-
-
 # vertex names
-#print(length(network.vertex.names(net)))
+print(length(network.vertex.names(net)))
 
 net %v% "ifPerturbed" = ifelse(network.vertex.names(net) %in% up_perturb_genes, "UpPerturbed", ifelse(network.vertex.names(net) %in% down_perturb_genes, "DownPerturbed", "normal"))
 net %v% "ifDeg" = ifelse(network.vertex.names(net) %in% de_genes, "deg", "non-deg")
@@ -398,7 +396,7 @@ visual_net_geneset_noT2d_visNet <- function(pthway_genes,title, w = 20, h = 10, 
 
 
     print(class(visNet))
-    visSave(visNet, file = paste0(cur_dir,"/output/ref_net_perturbDEG_cube_", title, '_',label, ".html"))
+    visSave(visNet, file = paste0(cur_dir,"ref_net_perturbDEG_cube_", title, '_',label, ".html"))
 
 }
 
@@ -414,8 +412,9 @@ if (cell_type == 'Beta'){
     h <- 5
 }
 
-
-
+cur_dir <- getwd()
+cur_dir <- "/project2/sli68423_1316/users/Kailiang/Test_Rcode"
+dir.create(cur_dir, recursive = TRUE, showWarnings = FALSE)
 #visual_net_geneset_deg(known_t2d_genes, 'Known T2D DEG network', w=w, h=h)
 #visual_net_geneset_perturb(known_t2d_genes, 'Known T2D Perturb network', w=w, h=h)
 visual_net_geneset_noT2d_visNet(known_t2d_genes, 'Known T2D Perturb network', w=w, h=h, strictFilter = T)
@@ -594,3 +593,4 @@ ggplot(dat, aes(fill=Genes, x=factor(Genes, level=c(dat$Genes)), y=centrality_sc
     ylab('Out Degree')
 
 ggsave(paste0(cur_dir, "/output/barplot_perturb_net_cube_", label, ".pdf"), width=5, height=5, limitsize = FALSE)
+
