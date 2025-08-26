@@ -413,7 +413,7 @@ if (cell_type == 'Beta'){
 }
 
 cur_dir <- getwd()
-cur_dir <- "/project2/sli68423_1316/users/Kailiang/Test_Rcode"
+cur_dir <- "/project2/sli68423_1316/users/Kailiang/Test_Rcode/B6"
 dir.create(cur_dir, recursive = TRUE, showWarnings = FALSE)
 #visual_net_geneset_deg(known_t2d_genes, 'Known T2D DEG network', w=w, h=h)
 #visual_net_geneset_perturb(known_t2d_genes, 'Known T2D Perturb network', w=w, h=h)
